@@ -1,9 +1,16 @@
 services:
-  postgres:
-    image: 'postgres:latest'
+  spendly-db:
+    image: postgres:16-alpine
+    container_name: spendly-db
+    restart: unless-stopped
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_DB: spendly_db
+      POSTGRES_USER: spendly_user
+      POSTGRES_PASSWORD: spendly_password
     ports:
-      - '5432'
+      - "5432:5432"
+    volumes:
+      - spendly_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  spendly_postgres_data:
