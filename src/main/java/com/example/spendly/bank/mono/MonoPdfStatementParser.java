@@ -29,17 +29,17 @@ public class MonoPdfStatementParser implements BankStatementParser {
     private static final Pattern TRANSACTION_DATE_PATTERN = Pattern.compile("\\d{2}\\.\\d{2}\\.\\d{4}");
 
     private static final Pattern TRANSACTION_PATTERN = Pattern.compile(
-            "^(\\d{2}\\.\\d{2}\\.\\d{4})\\s+" +         // 1 transactionDate
-                    "(\\d{2}:\\d{2}:\\d{2})\\s+" +              // 2 transactionTime
-                    "(.+?)\\s+" +                               // 3 description
-                    "(\\d{4})\\s+" +                            // 4 mccCode
-                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +     // 5 cardAmount
-                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +     // 6 operationAmount
-                    "([A-Z]{3})\\s+" +                          // 7 operationCurrency
-                    "(—|-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +   // 8 exchangeRate
-                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +     // 9 commissionAmount
-                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +     // 10 cashbackAmount
-                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})$"          // 11 balanceAfterTransaction
+            "^(\\d{2}\\.\\d{2}\\.\\d{4})\\s+" +
+                    "(\\d{2}:\\d{2}:\\d{2})\\s+" +
+                    "(.+?)\\s+" +
+                    "(\\d{4})\\s+" +
+                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +
+                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +
+                    "([A-Z]{3})\\s+" +
+                    "(—|-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +
+                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +
+                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})\\s+" +
+                    "(-?\\d+(?:\\s\\d{3})*\\.\\d{2})$"
     );
 
     private String cardCurrency;
@@ -98,26 +98,26 @@ public class MonoPdfStatementParser implements BankStatementParser {
         }
 
         return new MonoRawTransaction(
-                matcher.group(1),        // transactionDate
-                matcher.group(2),        // transactionTime
-                matcher.group(3),        // description
-                matcher.group(4),        // mccCode
+                matcher.group(1),
+                matcher.group(2),
+                matcher.group(3),
+                matcher.group(4),
 
-                matcher.group(5),        // cardAmount
-                cardCurrency,            // cardCurrency
+                matcher.group(5),
+                cardCurrency,
 
-                matcher.group(6),        // operationAmount
-                matcher.group(7),        // operationCurrency
+                matcher.group(6),
+                matcher.group(7),
 
-                matcher.group(8),        // exchangeRate
+                matcher.group(8),
 
-                matcher.group(9),        // commissionAmount
-                commissionCurrency,      // commissionCurrency
+                matcher.group(9),
+                commissionCurrency,
 
-                matcher.group(10),       // cashbackAmount
-                cashbackCurrency,        // cashbackCurrency
+                matcher.group(10),
+                cashbackCurrency,
 
-                matcher.group(11)        // balanceAfterTransaction
+                matcher.group(11)
         );
     }
 
