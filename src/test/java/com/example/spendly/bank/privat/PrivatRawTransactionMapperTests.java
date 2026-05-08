@@ -2,7 +2,7 @@ package com.example.spendly.bank.privat;
 
 import com.example.spendly.bank.common.model.ParsedTransaction;
 import com.example.spendly.statement.model.ParsedStatement;
-import com.example.spendly.transaction.model.CurrencyCode;
+import com.example.spendly.currency.common.model.CurrencyCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

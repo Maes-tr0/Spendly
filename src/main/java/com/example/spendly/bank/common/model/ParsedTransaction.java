@@ -1,6 +1,6 @@
 package com.example.spendly.bank.common.model;
 
-import com.example.spendly.transaction.model.CurrencyCode;
+import com.example.spendly.currency.common.model.CurrencyCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
