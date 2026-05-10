@@ -1,8 +1,11 @@
 package com.example.spendly.bank.rabo;
 
+import com.example.spendly.bank.common.model.BankCode;
 import com.example.spendly.bank.common.model.ParsedTransaction;
-import com.example.spendly.statement.model.ParsedStatement;
 import com.example.spendly.currency.common.model.CurrencyCode;
+import com.example.spendly.statement.model.ParsedStatement;
+import com.example.spendly.statement.model.StatementBalanceSummary;
+import com.example.spendly.statement.model.StatementPeriod;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,14 +18,23 @@ public class RaboRawTransactionMapper {
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-    public static ParsedStatement toParsedStatement(List<RaboRawTransaction> rawTransactions) {
+    public static ParsedStatement toParsedStatement(
+            StatementPeriod period,
+            StatementBalanceSummary balanceSummary,
+            List<RaboRawTransaction> rawTransactions
+    ) {
         List<ParsedTransaction> parsedTransactions = new ArrayList<>();
 
         for (RaboRawTransaction rawTransaction : rawTransactions) {
             parsedTransactions.add(toParsedTransaction(rawTransaction));
         }
 
-        return new ParsedStatement(parsedTransactions);
+        return new ParsedStatement(
+                BankCode.RABO,
+                period,
+                balanceSummary,
+                parsedTransactions
+        );
     }
 
     private static ParsedTransaction toParsedTransaction(RaboRawTransaction rawTransaction) {
@@ -33,21 +45,30 @@ public class RaboRawTransactionMapper {
                 getLocalDate(rawTransaction.valueDate()),
                 null,
                 getLocalDate(rawTransaction.processingDate()),
+
                 accountAmount,
                 accountCurrency,
+
                 accountAmount,
                 accountCurrency,
+
                 null,
                 rawTransaction.description(),
                 null,
+
                 null,
                 rawTransaction.transactionTypeCode(),
+
+                null,
+
                 null,
                 null,
+
                 null,
                 null,
+
                 null,
-                null,
+
                 rawTransaction.paymentReference(),
                 rawTransaction.endToEndId()
         );
@@ -66,7 +87,7 @@ public class RaboRawTransactionMapper {
     }
 
     private static BigDecimal getBigDecimal(String value) {
-        if (value == null || value.isBlank()) {
+        if (value == null || value.isBlank() || value.equals("—")) {
             return null;
         }
 
@@ -80,6 +101,10 @@ public class RaboRawTransactionMapper {
     }
 
     private static CurrencyCode getCurrencyCode(String value) {
+        if (value == null || value.isBlank() || value.equals("—")) {
+            return null;
+        }
+
         return CurrencyCode.fromString(value);
     }
 

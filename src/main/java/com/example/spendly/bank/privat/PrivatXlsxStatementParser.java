@@ -1,19 +1,30 @@
 package com.example.spendly.bank.privat;
 
-import com.example.spendly.bank.common.model.ParsedTransaction;
 import com.example.spendly.bank.common.parser.BankStatementParser;
+import com.example.spendly.currency.common.model.CurrencyCode;
 import com.example.spendly.statement.model.ParsedStatement;
+import com.example.spendly.statement.model.StatementBalanceSummary;
+import com.example.spendly.statement.model.StatementPeriod;
 import org.apache.poi.ss.usermodel.*;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PrivatXlsxStatementParser implements BankStatementParser {
 
+    private static final int TITLE_ROW_INDEX = 0;
+    private static final int TITLE_COLUMN_INDEX = 0;
+
     private static final int FIRST_TRANSACTION_ROW_INDEX = 2;
+
     private static final int TRANSACTION_DATE_TIME_COLUMN = 0;
     private static final int BANK_CATEGORY_NAME_COLUMN = 1;
     private static final int MASKED_CARD_NUMBER_COLUMN = 2;
@@ -25,18 +36,105 @@ public class PrivatXlsxStatementParser implements BankStatementParser {
     private static final int BALANCE_AFTER_TRANSACTION_COLUMN = 8;
     private static final int BALANCE_CURRENCY_COLUMN = 9;
 
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    private static final Pattern STATEMENT_PERIOD_PATTERN = Pattern.compile(
+            ".*?(\\d{2}\\.\\d{2}\\.\\d{4})\\s*-\\s*(\\d{2}\\.\\d{2}\\.\\d{4}).*"
+    );
+
     @Override
     public ParsedStatement parse(File file) {
-        try (Workbook workbook = WorkbookFactory.create(new FileInputStream(file))) {
-
+        try (
+                FileInputStream inputStream = new FileInputStream(file);
+                Workbook workbook = WorkbookFactory.create(inputStream)
+        ) {
             Sheet sheet = workbook.getSheetAt(0);
+
+            StatementPeriod period = getStatementPeriod(sheet);
 
             List<PrivatRawTransaction> rawTransactions = getPrivatRawTransactions(sheet);
 
-            return PrivatRawTransactionMapper.toParsedStatement(rawTransactions);
+            StatementBalanceSummary balanceSummary = getStatementBalanceSummary(rawTransactions);
+
+            return PrivatRawTransactionMapper.toParsedStatement(
+                    period,
+                    balanceSummary,
+                    rawTransactions
+            );
 
         } catch (IOException e) {
             throw new RuntimeException("Cannot parse PrivatBank XLSX statement", e);
+        }
+    }
+
+    private StatementPeriod getStatementPeriod(Sheet sheet) {
+        DataFormatter formatter = new DataFormatter();
+
+        Row titleRow = sheet.getRow(TITLE_ROW_INDEX);
+
+        if (titleRow == null) {
+            throw new IllegalArgumentException("Cannot find PrivatBank statement title row");
+        }
+
+        String title = getCellValue(titleRow, TITLE_COLUMN_INDEX, formatter);
+
+        Matcher matcher = STATEMENT_PERIOD_PATTERN.matcher(title);
+
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Cannot parse PrivatBank statement period: " + title);
+        }
+
+        LocalDate from = LocalDate.parse(matcher.group(1), DATE_FORMATTER);
+        LocalDate to = LocalDate.parse(matcher.group(2), DATE_FORMATTER);
+
+        return new StatementPeriod(from, to);
+    }
+
+    private StatementBalanceSummary getStatementBalanceSummary(List<PrivatRawTransaction> rawTransactions) {
+        if (rawTransactions == null || rawTransactions.isEmpty()) {
+            throw new IllegalArgumentException("Cannot calculate PrivatBank balance summary without transactions");
+        }
+
+        PrivatRawTransaction newestTransaction = rawTransactions.get(0);
+        PrivatRawTransaction oldestTransaction = rawTransactions.get(rawTransactions.size() - 1);
+
+        BigDecimal closingBalance = getBigDecimal(newestTransaction.balanceAfterTransaction());
+
+        BigDecimal oldestBalanceAfterTransaction = getBigDecimal(oldestTransaction.balanceAfterTransaction());
+        BigDecimal oldestTransactionAmount = getBigDecimal(oldestTransaction.cardAmount());
+
+        BigDecimal openingBalance = null;
+
+        if (oldestBalanceAfterTransaction != null && oldestTransactionAmount != null) {
+            openingBalance = oldestBalanceAfterTransaction.subtract(oldestTransactionAmount);
+        }
+
+        CurrencyCode accountCurrency = getCurrencyCode(newestTransaction.balanceCurrency());
+
+        validateBalanceCurrencies(rawTransactions, accountCurrency);
+
+        return new StatementBalanceSummary(
+                openingBalance,
+                closingBalance,
+                accountCurrency
+        );
+    }
+
+    private void validateBalanceCurrencies(
+            List<PrivatRawTransaction> rawTransactions,
+            CurrencyCode expectedCurrency
+    ) {
+        if (expectedCurrency == null) {
+            return;
+        }
+
+        for (PrivatRawTransaction rawTransaction : rawTransactions) {
+            CurrencyCode actualCurrency = getCurrencyCode(rawTransaction.balanceCurrency());
+
+            if (actualCurrency != null && !actualCurrency.equals(expectedCurrency)) {
+                throw new IllegalArgumentException("PrivatBank balance currencies are different in one statement");
+            }
         }
     }
 
@@ -91,14 +189,23 @@ public class PrivatXlsxStatementParser implements BankStatementParser {
         return formatter.formatCellValue(cell).trim();
     }
 
-
-    void main() {
-
-        ParsedStatement parsedStatement = parse(new File("src/main/resources/statements/privat.xlsx"));
-
-        for (ParsedTransaction transaction : parsedStatement.transactions()) {
-            System.out.println(transaction);
+    private BigDecimal getBigDecimal(String value) {
+        if (value == null || value.isBlank() || value.equals("—")) {
+            return null;
         }
 
+        return new BigDecimal(
+                value.trim()
+                        .replace(" ", "")
+                        .replace(",", ".")
+        );
+    }
+
+    private CurrencyCode getCurrencyCode(String value) {
+        if (value == null || value.isBlank() || value.equals("—")) {
+            return null;
+        }
+
+        return CurrencyCode.fromString(value);
     }
 }

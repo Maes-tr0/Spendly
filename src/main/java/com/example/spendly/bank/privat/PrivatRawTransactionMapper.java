@@ -1,28 +1,92 @@
 package com.example.spendly.bank.privat;
 
+import com.example.spendly.bank.common.model.BankCode;
 import com.example.spendly.bank.common.model.ParsedTransaction;
-import com.example.spendly.statement.model.ParsedStatement;
 import com.example.spendly.currency.common.model.CurrencyCode;
+import com.example.spendly.statement.model.ParsedStatement;
+import com.example.spendly.statement.model.StatementBalanceSummary;
+import com.example.spendly.statement.model.StatementPeriod;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PrivatRawTransactionMapper {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
-
-    public static ParsedStatement toParsedStatement(List<PrivatRawTransaction> rawTransactions) {
+    public static ParsedStatement toParsedStatement(
+            StatementPeriod period,
+            StatementBalanceSummary balanceSummary,
+            List<PrivatRawTransaction> rawTransactions
+    ) {
         List<ParsedTransaction> parsedTransactions = new ArrayList<>();
 
         for (PrivatRawTransaction rawTransaction : rawTransactions) {
             parsedTransactions.add(toParsedTransaction(rawTransaction));
         }
 
-        return new ParsedStatement(parsedTransactions);
+        return new ParsedStatement(
+                BankCode.PRIVAT,
+                period,
+                balanceSummary,
+                parsedTransactions
+        );
+    }
+
+    private static ParsedTransaction toParsedTransaction(PrivatRawTransaction rawTransaction) {
+        LocalDateTime transactionDateTime = getLocalDateTime(rawTransaction.transactionDateTime());
+
+        LocalDate transactionDate = transactionDateTime == null
+                ? null
+                : transactionDateTime.toLocalDate();
+
+        LocalTime transactionTime = transactionDateTime == null
+                ? null
+                : transactionDateTime.toLocalTime();
+
+        BigDecimal commissionAmount = getCommissionAmount(rawTransaction);
+
+        CurrencyCode commissionCurrencyCode = commissionAmount == null
+                ? null
+                : getCurrencyCode(rawTransaction.cardCurrency());
+
+        return new ParsedTransaction(
+                transactionDate,
+                transactionTime,
+                null,
+
+                getBigDecimal(rawTransaction.cardAmount()),
+                getCurrencyCode(rawTransaction.cardCurrency()),
+
+                getBigDecimal(rawTransaction.operationAmount()),
+                getCurrencyCode(rawTransaction.operationCurrency()),
+
+                null,
+                rawTransaction.description(),
+                rawTransaction.bankCategoryName(),
+
+                null,
+                null,
+
+                null,
+
+                commissionAmount,
+                commissionCurrencyCode,
+
+                null,
+                null,
+
+                getBigDecimal(rawTransaction.balanceAfterTransaction()),
+
+                null,
+                null
+        );
     }
 
     private static BigDecimal getCommissionAmount(PrivatRawTransaction rawTransaction) {
@@ -55,39 +119,6 @@ public class PrivatRawTransactionMapper {
         return commission;
     }
 
-
-    private static ParsedTransaction toParsedTransaction(PrivatRawTransaction rawTransaction) {
-        LocalDateTime transactionDateTime = getLocalDateTime(rawTransaction.transactionDateTime());
-
-        BigDecimal commissionAmount = getCommissionAmount(rawTransaction);
-        CurrencyCode commissionCurrencyCode = commissionAmount == null
-                ? null
-                : getCurrencyCode(rawTransaction.cardCurrency());
-
-        return new ParsedTransaction(
-                transactionDateTime.toLocalDate(),
-                transactionDateTime.toLocalTime(),
-                null,
-                getBigDecimal(rawTransaction.cardAmount()),
-                getCurrencyCode(rawTransaction.cardCurrency()),
-                getBigDecimal(rawTransaction.operationAmount()),
-                getCurrencyCode(rawTransaction.operationCurrency()),
-                null,
-                rawTransaction.description(),
-                rawTransaction.bankCategoryName(),
-                null,
-                null,
-                null,
-                commissionAmount,
-                commissionCurrencyCode,
-                null,
-                null,
-                getBigDecimal(rawTransaction.balanceAfterTransaction()),
-                null,
-                null
-        );
-    }
-
     private static LocalDateTime getLocalDateTime(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -115,6 +146,10 @@ public class PrivatRawTransactionMapper {
     }
 
     private static CurrencyCode getCurrencyCode(String value) {
+        if (value == null || value.isBlank() || value.equals("—")) {
+            return null;
+        }
+
         return CurrencyCode.fromString(value);
     }
 }

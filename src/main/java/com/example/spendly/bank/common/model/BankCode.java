@@ -11,13 +11,4 @@ public enum BankCode {
     PRIVAT("PrivatBank");
 
     final String bankName;
-
-    public BankCode getBankCode(String bankName) {
-        for (BankCode bankCode : BankCode.values()) {
-            if (bankCode.bankName.equalsIgnoreCase(bankName)) {
-                return bankCode;
-            }
-        }
-        return null;
-    }
 }
