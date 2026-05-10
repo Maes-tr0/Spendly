@@ -51,8 +51,8 @@ public class MonoStatementMetadataParser implements StatementMetadataParser<Text
     public StatementBalanceSummary parseBalanceSummary(TextStatementSource source) {
         String rawText = source.text();
 
-        BalanceValue openingBalance = parseBalanceValue(rawText, OPENING_BALANCE_PATTERN);
-        BalanceValue closingBalance = parseBalanceValue(rawText, CLOSING_BALANCE_PATTERN);
+        MonoBalanceValue openingBalance = parseBalanceValue(rawText, OPENING_BALANCE_PATTERN);
+        MonoBalanceValue closingBalance = parseBalanceValue(rawText, CLOSING_BALANCE_PATTERN);
 
         if (!openingBalance.currency().equals(closingBalance.currency())) {
             throw new IllegalArgumentException("Opening and closing balance currencies are different");
@@ -65,7 +65,7 @@ public class MonoStatementMetadataParser implements StatementMetadataParser<Text
         );
     }
 
-    private BalanceValue parseBalanceValue(String rawText, Pattern pattern) {
+    private MonoBalanceValue parseBalanceValue(String rawText, Pattern pattern) {
         Matcher matcher = pattern.matcher(rawText);
 
         if (!matcher.find()) {
@@ -75,7 +75,7 @@ public class MonoStatementMetadataParser implements StatementMetadataParser<Text
         BigDecimal amount = parseBigDecimal(matcher.group(1));
         CurrencyCode currency = CurrencyCode.fromString(matcher.group(2));
 
-        return new BalanceValue(amount, currency);
+        return new MonoBalanceValue(amount, currency);
     }
 
     private BigDecimal parseBigDecimal(String value) {
@@ -90,7 +90,7 @@ public class MonoStatementMetadataParser implements StatementMetadataParser<Text
         );
     }
 
-    private record BalanceValue(
+    private record MonoBalanceValue(
             BigDecimal amount,
             CurrencyCode currency
     ) {

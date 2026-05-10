@@ -71,7 +71,7 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
         String rawText = source.text();
         String statementHeader = extractStatementHeader(rawText);
 
-        List<BalanceValue> balances = extractBalanceValues(statementHeader);
+        List<RaboBalanceValue> balances = extractBalanceValues(statementHeader);
 
         if (balances.size() < 2) {
             throw new IllegalArgumentException("Cannot parse Rabobank opening and closing balance from header: " + statementHeader);
@@ -118,10 +118,10 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
         return dates;
     }
 
-    private List<BalanceValue> extractBalanceValues(String text) {
+    private List<RaboBalanceValue> extractBalanceValues(String text) {
         Matcher matcher = BALANCE_VALUE_PATTERN.matcher(text);
 
-        List<BalanceValue> balances = new ArrayList<>();
+        List<RaboBalanceValue> balances = new ArrayList<>();
 
         while (matcher.find()) {
             BigDecimal amount = parseAmount(matcher.group(1));
@@ -131,7 +131,7 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
                 amount = amount.negate();
             }
 
-            balances.add(new BalanceValue(amount, type));
+            balances.add(new RaboBalanceValue(amount, type));
         }
 
         return balances;
@@ -186,7 +186,7 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
                 .trim();
     }
 
-    private record BalanceValue(
+    private record RaboBalanceValue(
             BigDecimal amount,
             String type
     ) {

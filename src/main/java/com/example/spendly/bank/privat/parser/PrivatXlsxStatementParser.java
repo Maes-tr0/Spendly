@@ -81,7 +81,7 @@ public class PrivatXlsxStatementParser implements BankStatementParser {
 
         } catch (IOException e) {
             throw new RuntimeException(
-                    String.format("Cannot parse %s XLSX statement", getBankCode()),
+                    String.format("Cannot parse %s XLSX statement", getBankCode().getBankName()),
                     e
             );
         }
