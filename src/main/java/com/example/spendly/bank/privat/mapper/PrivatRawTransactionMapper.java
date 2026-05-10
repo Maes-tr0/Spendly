@@ -1,45 +1,25 @@
-package com.example.spendly.bank.privat;
+package com.example.spendly.bank.privat.mapper;
 
-import com.example.spendly.bank.common.model.BankCode;
-import com.example.spendly.bank.common.model.ParsedTransaction;
+import com.example.spendly.bank.common.mapper.RawTransactionMapper;
+import com.example.spendly.bank.privat.model.PrivatRawTransaction;
 import com.example.spendly.currency.common.model.CurrencyCode;
-import com.example.spendly.statement.model.ParsedStatement;
-import com.example.spendly.statement.model.StatementBalanceSummary;
-import com.example.spendly.statement.model.StatementPeriod;
+import com.example.spendly.statement.model.ParsedTransaction;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
-public class PrivatRawTransactionMapper {
+@Component
+public class PrivatRawTransactionMapper implements RawTransactionMapper<PrivatRawTransaction> {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
-    public static ParsedStatement toParsedStatement(
-            StatementPeriod period,
-            StatementBalanceSummary balanceSummary,
-            List<PrivatRawTransaction> rawTransactions
-    ) {
-        List<ParsedTransaction> parsedTransactions = new ArrayList<>();
-
-        for (PrivatRawTransaction rawTransaction : rawTransactions) {
-            parsedTransactions.add(toParsedTransaction(rawTransaction));
-        }
-
-        return new ParsedStatement(
-                BankCode.PRIVAT,
-                period,
-                balanceSummary,
-                parsedTransactions
-        );
-    }
-
-    private static ParsedTransaction toParsedTransaction(PrivatRawTransaction rawTransaction) {
+    @Override
+    public ParsedTransaction toParsedTransaction(PrivatRawTransaction rawTransaction) {
         LocalDateTime transactionDateTime = getLocalDateTime(rawTransaction.transactionDateTime());
 
         LocalDate transactionDate = transactionDateTime == null
@@ -89,7 +69,7 @@ public class PrivatRawTransactionMapper {
         );
     }
 
-    private static BigDecimal getCommissionAmount(PrivatRawTransaction rawTransaction) {
+    private BigDecimal getCommissionAmount(PrivatRawTransaction rawTransaction) {
         CurrencyCode cardCurrency = getCurrencyCode(rawTransaction.cardCurrency());
         CurrencyCode operationCurrency = getCurrencyCode(rawTransaction.operationCurrency());
 
@@ -119,7 +99,7 @@ public class PrivatRawTransactionMapper {
         return commission;
     }
 
-    private static LocalDateTime getLocalDateTime(String value) {
+    private LocalDateTime getLocalDateTime(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
@@ -133,19 +113,19 @@ public class PrivatRawTransactionMapper {
         return LocalDateTime.parse(normalized, DATE_TIME_FORMATTER);
     }
 
-    private static BigDecimal getBigDecimal(String value) {
+    private BigDecimal getBigDecimal(String value) {
         if (value == null || value.isBlank() || value.equals("—")) {
             return null;
         }
 
-        String normalized = value.trim()
-                .replace(" ", "")
-                .replace(",", ".");
-
-        return new BigDecimal(normalized);
+        return new BigDecimal(
+                value.trim()
+                        .replace(" ", "")
+                        .replace(",", ".")
+        );
     }
 
-    private static CurrencyCode getCurrencyCode(String value) {
+    private CurrencyCode getCurrencyCode(String value) {
         if (value == null || value.isBlank() || value.equals("—")) {
             return null;
         }

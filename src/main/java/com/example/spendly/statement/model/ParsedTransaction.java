@@ -1,4 +1,4 @@
-package com.example.spendly.bank.common.model;
+package com.example.spendly.statement.model;
 
 import com.example.spendly.currency.common.model.CurrencyCode;
 

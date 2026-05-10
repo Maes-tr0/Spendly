@@ -1,43 +1,23 @@
-package com.example.spendly.bank.rabo;
+package com.example.spendly.bank.rabo.mapper;
 
-import com.example.spendly.bank.common.model.BankCode;
-import com.example.spendly.bank.common.model.ParsedTransaction;
+import com.example.spendly.bank.common.mapper.RawTransactionMapper;
+import com.example.spendly.bank.rabo.model.RaboRawTransaction;
 import com.example.spendly.currency.common.model.CurrencyCode;
-import com.example.spendly.statement.model.ParsedStatement;
-import com.example.spendly.statement.model.StatementBalanceSummary;
-import com.example.spendly.statement.model.StatementPeriod;
+import com.example.spendly.statement.model.ParsedTransaction;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
-public class RaboRawTransactionMapper {
+@Component
+public class RaboRawTransactionMapper implements RawTransactionMapper<RaboRawTransaction> {
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-    public static ParsedStatement toParsedStatement(
-            StatementPeriod period,
-            StatementBalanceSummary balanceSummary,
-            List<RaboRawTransaction> rawTransactions
-    ) {
-        List<ParsedTransaction> parsedTransactions = new ArrayList<>();
-
-        for (RaboRawTransaction rawTransaction : rawTransactions) {
-            parsedTransactions.add(toParsedTransaction(rawTransaction));
-        }
-
-        return new ParsedStatement(
-                BankCode.RABO,
-                period,
-                balanceSummary,
-                parsedTransactions
-        );
-    }
-
-    private static ParsedTransaction toParsedTransaction(RaboRawTransaction rawTransaction) {
+    @Override
+    public ParsedTransaction toParsedTransaction(RaboRawTransaction rawTransaction) {
         BigDecimal accountAmount = getSignedAmount(rawTransaction);
         CurrencyCode accountCurrency = getCurrencyCode(rawTransaction.accountCurrency());
 
@@ -74,7 +54,7 @@ public class RaboRawTransactionMapper {
         );
     }
 
-    private static BigDecimal getSignedAmount(RaboRawTransaction rawTransaction) {
+    private BigDecimal getSignedAmount(RaboRawTransaction rawTransaction) {
         if (rawTransaction.debitAmount() != null && !rawTransaction.debitAmount().isBlank()) {
             return getBigDecimal(rawTransaction.debitAmount()).negate();
         }
@@ -86,7 +66,7 @@ public class RaboRawTransactionMapper {
         return null;
     }
 
-    private static BigDecimal getBigDecimal(String value) {
+    private BigDecimal getBigDecimal(String value) {
         if (value == null || value.isBlank() || value.equals("—")) {
             return null;
         }
@@ -100,7 +80,7 @@ public class RaboRawTransactionMapper {
         );
     }
 
-    private static CurrencyCode getCurrencyCode(String value) {
+    private CurrencyCode getCurrencyCode(String value) {
         if (value == null || value.isBlank() || value.equals("—")) {
             return null;
         }
@@ -108,7 +88,7 @@ public class RaboRawTransactionMapper {
         return CurrencyCode.fromString(value);
     }
 
-    private static LocalDate getLocalDate(String value) {
+    private LocalDate getLocalDate(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }

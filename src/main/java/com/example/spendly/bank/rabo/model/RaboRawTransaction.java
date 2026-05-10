@@ -1,4 +1,6 @@
-package com.example.spendly.bank.rabo;
+package com.example.spendly.bank.rabo.model;
+
+import com.example.spendly.bank.common.model.BankRawTransaction;
 
 public record RaboRawTransaction(
         String valueDate,
@@ -11,5 +13,5 @@ public record RaboRawTransaction(
         String paymentReference,
         String endToEndId,
         String accountCurrency
-) {
+) implements BankRawTransaction {
 }

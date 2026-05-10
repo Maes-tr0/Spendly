@@ -1,5 +1,6 @@
-package com.example.spendly.bank.privat;
+package com.example.spendly.bank.privat.model;
 
+import com.example.spendly.bank.common.model.BankRawTransaction;
 import lombok.Builder;
 
 @Builder
@@ -14,5 +15,5 @@ public record PrivatRawTransaction(
         String operationCurrency,
         String balanceAfterTransaction,
         String balanceCurrency
-) {
+) implements BankRawTransaction {
 }

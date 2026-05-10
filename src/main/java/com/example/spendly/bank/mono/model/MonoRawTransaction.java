@@ -1,4 +1,6 @@
-package com.example.spendly.bank.mono;
+package com.example.spendly.bank.mono.model;
+
+import com.example.spendly.bank.common.model.BankRawTransaction;
 
 public record MonoRawTransaction(
         String transactionDate,
@@ -15,5 +17,5 @@ public record MonoRawTransaction(
         String cashbackAmount,
         String cashbackCurrency,
         String balanceAfterTransaction
-) {
+) implements BankRawTransaction {
 }

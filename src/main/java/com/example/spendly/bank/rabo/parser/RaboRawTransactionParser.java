@@ -1,32 +1,23 @@
-package com.example.spendly.bank.rabo;
+package com.example.spendly.bank.rabo.parser;
 
-import com.example.spendly.bank.common.parser.BankStatementParser;
-import com.example.spendly.currency.common.model.CurrencyCode;
-import com.example.spendly.statement.model.ParsedStatement;
-import com.example.spendly.statement.model.StatementBalanceSummary;
+import com.example.spendly.bank.common.parser.RawTransactionParser;
+import com.example.spendly.bank.common.source.TextStatementSource;
+import com.example.spendly.bank.rabo.model.RaboRawTransaction;
 import com.example.spendly.statement.model.StatementPeriod;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RaboPdfStatementParser implements BankStatementParser {
+@Component
+public class RaboRawTransactionParser implements RawTransactionParser<TextStatementSource, RaboRawTransaction> {
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
-    private static final DateTimeFormatter VALUE_DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("dd-MM");
 
     private static final String AMOUNT_REGEX =
             "\\d{1,3}(?:\\.\\d{3})*,\\d{2}|\\d+,\\d{2}";
@@ -58,134 +49,10 @@ public class RaboPdfStatementParser implements BankStatementParser {
             "\\bNL\\d{2}\\s+RABO(?:\\s+\\d{4}){2}\\s+\\d{2}\\s+([A-Z]{3})\\b"
     );
 
-    private static final Pattern FULL_DATE_PATTERN = Pattern.compile(
-            "\\b\\d{2}-\\d{2}-\\d{4}\\b"
-    );
-
-    private static final Pattern BALANCE_VALUE_PATTERN = Pattern.compile(
-            "\\b(" + AMOUNT_REGEX + ")\\s+(CR|D)\\b"
-    );
-
     @Override
-    public ParsedStatement parse(File file) {
-        try (PDDocument document = Loader.loadPDF(file)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setSortByPosition(true);
+    public List<RaboRawTransaction> parse(TextStatementSource source, StatementPeriod period) {
+        String rawText = source.text();
 
-            String rawText = stripper.getText(document);
-
-            String statementHeader = extractStatementHeader(rawText);
-
-            StatementPeriod period = parseStatementPeriod(statementHeader);
-            StatementBalanceSummary balanceSummary = parseStatementBalanceSummary(rawText, statementHeader);
-
-            List<RaboRawTransaction> rawTransactions = getRaboRawTransactions(rawText, period);
-
-            return RaboRawTransactionMapper.toParsedStatement(
-                    period,
-                    balanceSummary,
-                    rawTransactions
-            );
-
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot parse Rabobank PDF statement", e);
-        }
-    }
-
-    private String extractStatementHeader(String rawText) {
-        List<String> lines = getNormalizedLines(rawText);
-
-        StringBuilder header = new StringBuilder();
-
-        for (String line : lines) {
-            if (isTransactionStartLine(line)) {
-                break;
-            }
-
-            header.append(line).append("\n");
-        }
-
-        if (header.isEmpty()) {
-            throw new IllegalArgumentException("Cannot extract Rabobank statement header");
-        }
-
-        return header.toString();
-    }
-
-    private StatementPeriod parseStatementPeriod(String statementHeader) {
-        List<LocalDate> dates = extractFullDates(statementHeader);
-
-        if (dates.size() >= 3) {
-            return new StatementPeriod(
-                    dates.get(1),
-                    dates.get(2)
-            );
-        }
-
-        if (dates.size() >= 2) {
-            return new StatementPeriod(
-                    dates.get(0),
-                    dates.get(1)
-            );
-        }
-
-        throw new IllegalArgumentException("Cannot parse Rabobank statement period from header: " + statementHeader);
-    }
-
-    private List<LocalDate> extractFullDates(String text) {
-        Matcher matcher = FULL_DATE_PATTERN.matcher(text);
-
-        List<LocalDate> dates = new ArrayList<>();
-
-        while (matcher.find()) {
-            dates.add(LocalDate.parse(matcher.group(), DATE_FORMATTER));
-        }
-
-        return dates;
-    }
-
-    private StatementBalanceSummary parseStatementBalanceSummary(
-            String rawText,
-            String statementHeader
-    ) {
-        List<BalanceValue> balances = extractBalanceValues(statementHeader);
-
-        if (balances.size() < 2) {
-            throw new IllegalArgumentException("Cannot parse Rabobank opening and closing balance from header: " + statementHeader);
-        }
-
-        CurrencyCode accountCurrency = CurrencyCode.fromString(extractAccountCurrency(rawText));
-
-        return new StatementBalanceSummary(
-                balances.get(0).amount(),
-                balances.get(1).amount(),
-                accountCurrency
-        );
-    }
-
-    private List<BalanceValue> extractBalanceValues(String text) {
-        Matcher matcher = BALANCE_VALUE_PATTERN.matcher(text);
-
-        List<BalanceValue> balances = new ArrayList<>();
-
-        while (matcher.find()) {
-            BigDecimal amount = parseAmount(matcher.group(1));
-            String type = matcher.group(2);
-
-            if ("D".equals(type)) {
-                amount = amount.negate();
-            }
-
-            balances.add(new BalanceValue(amount, type));
-        }
-
-        return balances;
-    }
-
-    private List<RaboRawTransaction> getRaboRawTransactions(
-            String rawText,
-            StatementPeriod period
-    ) {
         String accountCurrency = extractAccountCurrency(rawText);
 
         List<String> blocks = getRawTransactionBlocks(rawText);
@@ -371,12 +238,16 @@ public class RaboPdfStatementParser implements BankStatementParser {
     }
 
     private String resolveFullValueDate(String valueDateWithoutYear, StatementPeriod period) {
-        MonthDay valueMonthDay = MonthDay.parse(valueDateWithoutYear, VALUE_DATE_FORMATTER);
-
-        LocalDate valueDate = valueMonthDay.atYear(period.from().getYear());
+        LocalDate valueDate = LocalDate.parse(
+                valueDateWithoutYear + "-" + period.from().getYear(),
+                DATE_FORMATTER
+        );
 
         if (valueDate.isBefore(period.from())) {
-            valueDate = valueMonthDay.atYear(period.to().getYear());
+            valueDate = LocalDate.parse(
+                    valueDateWithoutYear + "-" + period.to().getYear(),
+                    DATE_FORMATTER
+            );
         }
 
         return valueDate.format(DATE_FORMATTER);
@@ -390,34 +261,6 @@ public class RaboPdfStatementParser implements BankStatementParser {
         }
 
         return matcher.group(1);
-    }
-
-    private List<String> getNormalizedLines(String rawText) {
-        List<String> lines = new ArrayList<>();
-
-        for (String rawLine : rawText.split("\\R")) {
-            String line = normalizeLine(rawLine);
-
-            if (!line.isBlank()) {
-                lines.add(line);
-            }
-        }
-
-        return lines;
-    }
-
-    private BigDecimal parseAmount(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-
-        return new BigDecimal(
-                value.trim()
-                        .replace("\u00A0", "")
-                        .replace(" ", "")
-                        .replace(".", "")
-                        .replace(",", ".")
-        );
     }
 
     private boolean isTransactionStartLine(String line) {
@@ -485,11 +328,5 @@ public class RaboPdfStatementParser implements BankStatementParser {
                 .replace('\u00A0', ' ')
                 .replaceAll("\\s+", " ")
                 .trim();
-    }
-
-    private record BalanceValue(
-            BigDecimal amount,
-            String type
-    ) {
     }
 }
