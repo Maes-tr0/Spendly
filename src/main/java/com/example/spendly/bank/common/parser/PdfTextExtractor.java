@@ -1,5 +1,6 @@
 package com.example.spendly.bank.common.source;
 
+import com.example.spendly.bank.common.exception.StatementParseException;
 import com.example.spendly.bank.common.model.BankCode;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -22,7 +23,7 @@ public class PdfTextExtractor {
             return new TextStatementSource(text);
 
         } catch (IOException e) {
-            throw new IllegalStateException(
+            throw new StatementParseException(
                     "Cannot extract text from " + bankCode.getBankName() + " PDF statement: " + file.getName(),
                     e
             );

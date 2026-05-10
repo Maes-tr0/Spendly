@@ -10,13 +10,9 @@ import com.example.spendly.statement.model.ParsedStatement;
 import com.example.spendly.statement.model.StatementBalanceSummary;
 import com.example.spendly.statement.model.StatementPeriod;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor

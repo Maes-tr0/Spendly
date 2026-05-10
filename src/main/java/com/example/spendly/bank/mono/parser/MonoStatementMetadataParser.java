@@ -1,5 +1,6 @@
 package com.example.spendly.bank.mono.parser;
 
+import com.example.spendly.bank.common.exception.StatementParseException;
 import com.example.spendly.bank.common.parser.StatementMetadataParser;
 import com.example.spendly.bank.common.source.TextStatementSource;
 import com.example.spendly.currency.common.model.CurrencyCode;
@@ -38,7 +39,7 @@ public class MonoStatementMetadataParser implements StatementMetadataParser<Text
         Matcher matcher = STATEMENT_PERIOD_PATTERN.matcher(rawText);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("Cannot parse Monobank statement period");
+            throw new StatementParseException("Cannot parse Monobank statement period");
         }
 
         LocalDate from = LocalDate.parse(matcher.group(1), DATE_FORMATTER);
@@ -55,7 +56,7 @@ public class MonoStatementMetadataParser implements StatementMetadataParser<Text
         MonoBalanceValue closingBalance = parseBalanceValue(rawText, CLOSING_BALANCE_PATTERN);
 
         if (!openingBalance.currency().equals(closingBalance.currency())) {
-            throw new IllegalArgumentException("Opening and closing balance currencies are different");
+            throw new StatementParseException("Opening and closing balance currencies are different");
         }
 
         return new StatementBalanceSummary(
@@ -69,7 +70,7 @@ public class MonoStatementMetadataParser implements StatementMetadataParser<Text
         Matcher matcher = pattern.matcher(rawText);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("Cannot parse Monobank balance value");
+            throw new StatementParseException("Cannot parse Monobank balance value");
         }
 
         BigDecimal amount = parseBigDecimal(matcher.group(1));

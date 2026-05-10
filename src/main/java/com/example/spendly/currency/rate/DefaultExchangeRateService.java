@@ -1,7 +1,8 @@
 package com.example.spendly.currency.rate;
 
-import com.example.spendly.currency.rate.provider.ExchangeRateProvider;
+import com.example.spendly.currency.common.exception.ExchangeRateException;
 import com.example.spendly.currency.common.model.CurrencyCode;
+import com.example.spendly.currency.rate.provider.ExchangeRateProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,15 +40,15 @@ public class DefaultExchangeRateService implements ExchangeRateService {
             LocalDate date
     ) {
         if (fromCurrency == null) {
-            throw new IllegalArgumentException("From currency must not be null");
+            throw new ExchangeRateException("From currency must not be null");
         }
 
         if (toCurrency == null) {
-            throw new IllegalArgumentException("To currency must not be null");
+            throw new ExchangeRateException("To currency must not be null");
         }
 
         if (date == null) {
-            throw new IllegalArgumentException("Exchange rate date must not be null");
+            throw new ExchangeRateException("Exchange rate date must not be null");
         }
     }
 }

@@ -18,6 +18,17 @@ public enum CurrencyCode {
 
     private final int numericCode;
 
+    public static CurrencyCode fromString(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Currency code cannot be empty");
+        }
+
+        return Arrays.stream(values())
+                .filter(currency -> currency.isSame(value))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported currency code: " + value));
+    }
+
     public String getAlphabeticCode() {
         return name();
     }
@@ -28,16 +39,5 @@ public enum CurrencyCode {
         }
 
         return getAlphabeticCode().equalsIgnoreCase(value.trim());
-    }
-
-    public static CurrencyCode fromString(String value) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Currency code cannot be empty");
-        }
-
-        return Arrays.stream(values())
-                .filter(currency -> currency.isSame(value))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported currency code: " + value));
     }
 }

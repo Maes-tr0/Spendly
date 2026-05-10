@@ -1,5 +1,6 @@
 package com.example.spendly.currency.conversion;
 
+import com.example.spendly.currency.common.exception.ExchangeRateException;
 import com.example.spendly.currency.common.model.CurrencyCode;
 import com.example.spendly.currency.rate.ExchangeRateService;
 import lombok.AllArgsConstructor;
@@ -23,15 +24,15 @@ public class DefaultCurrencyConversionService implements CurrencyConversionServi
             LocalDate transactionDate
     ) {
         if (amount == null) {
-            throw new IllegalArgumentException("Amount cannot be null");
+            throw new ExchangeRateException("Amount cannot be null");
         }
 
         if (from == null || to == null) {
-            throw new IllegalArgumentException("Currency cannot be null");
+            throw new ExchangeRateException("Currency cannot be null");
         }
 
         if (transactionDate == null) {
-            throw new IllegalArgumentException("Transaction date cannot be null");
+            throw new ExchangeRateException("Transaction date cannot be null");
         }
 
         if (from == to) {

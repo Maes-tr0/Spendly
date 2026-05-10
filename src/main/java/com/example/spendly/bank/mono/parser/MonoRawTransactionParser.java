@@ -1,5 +1,6 @@
 package com.example.spendly.bank.mono.parser;
 
+import com.example.spendly.bank.common.exception.StatementParseException;
 import com.example.spendly.bank.common.parser.RawTransactionParser;
 import com.example.spendly.bank.common.source.TextStatementSource;
 import com.example.spendly.bank.mono.model.MonoRawTransaction;
@@ -56,11 +57,11 @@ public class MonoRawTransactionParser implements RawTransactionParser<TextStatem
         int end = rawText.indexOf("Operating Director");
 
         if (begin == -1) {
-            throw new IllegalArgumentException("Cannot find Monobank transaction table start");
+            throw new StatementParseException("Cannot find Monobank transaction table start");
         }
 
         if (end == -1) {
-            throw new IllegalArgumentException("Cannot find Monobank transaction table end");
+            throw new StatementParseException("Cannot find Monobank transaction table end");
         }
 
         return rawText.substring(begin, end);
@@ -70,7 +71,7 @@ public class MonoRawTransactionParser implements RawTransactionParser<TextStatem
         Matcher matcher = TRANSACTION_PATTERN.matcher(row);
 
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Cannot parse Monobank transaction row: " + row);
+            throw new StatementParseException("Cannot parse Monobank transaction row: " + row);
         }
 
         return new MonoRawTransaction(
@@ -116,13 +117,13 @@ public class MonoRawTransactionParser implements RawTransactionParser<TextStatem
             }
 
             if (secondLineIndex >= lines.length) {
-                throw new IllegalArgumentException("Cannot find Monobank transaction time line");
+                throw new StatementParseException("Cannot find Monobank transaction time line");
             }
 
             String secondLine = lines[secondLineIndex].trim();
 
             if (!isTransactionTimeLine(secondLine)) {
-                throw new IllegalArgumentException("Cannot parse Monobank transaction time line: " + secondLine);
+                throw new StatementParseException("Cannot parse Monobank transaction time line: " + secondLine);
             }
 
             transactions.add(normalizeTransaction(firstLine, secondLine));
@@ -181,7 +182,7 @@ public class MonoRawTransactionParser implements RawTransactionParser<TextStatem
             }
         }
 
-        throw new IllegalArgumentException("Cannot find MCC in line: " + sourceLine);
+        throw new StatementParseException("Cannot find MCC in line: " + sourceLine);
     }
 
     private TableCurrencies parseTableCurrencies(String rawTable) {
@@ -198,7 +199,7 @@ public class MonoRawTransactionParser implements RawTransactionParser<TextStatem
         }
 
         if (currencies.size() < 3) {
-            throw new IllegalArgumentException("Cannot detect Monobank table currencies");
+            throw new StatementParseException("Cannot detect Monobank table currencies");
         }
 
         return new TableCurrencies(
@@ -212,7 +213,7 @@ public class MonoRawTransactionParser implements RawTransactionParser<TextStatem
         Matcher matcher = TRANSACTION_DATE_PATTERN.matcher(rawTable);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("Cannot find first transaction in Monobank table");
+            throw new StatementParseException("Cannot find first transaction in Monobank table");
         }
 
         return matcher.start();

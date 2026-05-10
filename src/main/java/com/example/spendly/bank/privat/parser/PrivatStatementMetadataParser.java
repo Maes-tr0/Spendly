@@ -1,5 +1,6 @@
 package com.example.spendly.bank.privat.parser;
 
+import com.example.spendly.bank.common.exception.StatementParseException;
 import com.example.spendly.bank.common.parser.StatementMetadataParser;
 import com.example.spendly.bank.common.source.TableStatementSource;
 import com.example.spendly.currency.common.model.CurrencyCode;
@@ -40,7 +41,7 @@ public class PrivatStatementMetadataParser implements StatementMetadataParser<Ta
         Matcher matcher = STATEMENT_PERIOD_PATTERN.matcher(title);
 
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Cannot parse PrivatBank statement period: " + title);
+            throw new StatementParseException("Cannot parse PrivatBank statement period: " + title);
         }
 
         LocalDate from = LocalDate.parse(matcher.group(1), DATE_FORMATTER);
@@ -94,7 +95,7 @@ public class PrivatStatementMetadataParser implements StatementMetadataParser<Ta
             }
         }
 
-        throw new IllegalArgumentException("Cannot find first PrivatBank transaction row");
+        throw new StatementParseException("Cannot find first PrivatBank transaction row");
     }
 
     private int findLastTransactionRowIndex(TableStatementSource source) {
@@ -106,7 +107,7 @@ public class PrivatStatementMetadataParser implements StatementMetadataParser<Ta
             }
         }
 
-        throw new IllegalArgumentException("Cannot find last PrivatBank transaction row");
+        throw new StatementParseException("Cannot find last PrivatBank transaction row");
     }
 
     private void validateBalanceCurrencies(
@@ -127,7 +128,7 @@ public class PrivatStatementMetadataParser implements StatementMetadataParser<Ta
             CurrencyCode actualCurrency = getCurrencyCode(source.getValue(i, BALANCE_CURRENCY_COLUMN));
 
             if (actualCurrency != null && !actualCurrency.equals(expectedCurrency)) {
-                throw new IllegalArgumentException("PrivatBank balance currencies are different in one statement");
+                throw new StatementParseException("PrivatBank balance currencies are different in one statement");
             }
         }
     }

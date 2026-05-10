@@ -1,5 +1,6 @@
 package com.example.spendly.bank.rabo.parser;
 
+import com.example.spendly.bank.common.exception.StatementParseException;
 import com.example.spendly.bank.common.parser.StatementMetadataParser;
 import com.example.spendly.bank.common.source.TextStatementSource;
 import com.example.spendly.currency.common.model.CurrencyCode;
@@ -63,7 +64,7 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
             );
         }
 
-        throw new IllegalArgumentException("Cannot parse Rabobank statement period from header: " + statementHeader);
+        throw new StatementParseException("Cannot parse Rabobank statement period from header: " + statementHeader);
     }
 
     @Override
@@ -74,7 +75,7 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
         List<RaboBalanceValue> balances = extractBalanceValues(statementHeader);
 
         if (balances.size() < 2) {
-            throw new IllegalArgumentException("Cannot parse Rabobank opening and closing balance from header: " + statementHeader);
+            throw new StatementParseException("Cannot parse Rabobank opening and closing balance from header: " + statementHeader);
         }
 
         CurrencyCode accountCurrency = CurrencyCode.fromString(extractAccountCurrency(rawText));
@@ -100,7 +101,7 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
         }
 
         if (header.isEmpty()) {
-            throw new IllegalArgumentException("Cannot extract Rabobank statement header");
+            throw new StatementParseException("Cannot extract Rabobank statement header");
         }
 
         return header.toString();
@@ -141,7 +142,7 @@ public class RaboStatementMetadataParser implements StatementMetadataParser<Text
         Matcher matcher = ACCOUNT_CURRENCY_PATTERN.matcher(rawText);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("Cannot find Rabobank account currency");
+            throw new StatementParseException("Cannot find Rabobank account currency");
         }
 
         return matcher.group(1);

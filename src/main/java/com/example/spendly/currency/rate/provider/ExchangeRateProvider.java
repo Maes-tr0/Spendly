@@ -18,8 +18,8 @@ public interface ExchangeRateProvider {
      * on a specific date.
      *
      * @param fromCurrency source currency
-     * @param toCurrency target currency
-     * @param date date for which the exchange rate should be received
+     * @param toCurrency   target currency
+     * @param date         date for which the exchange rate should be received
      * @return exchange rate from source currency to target currency
      */
     BigDecimal getExchangeRate(

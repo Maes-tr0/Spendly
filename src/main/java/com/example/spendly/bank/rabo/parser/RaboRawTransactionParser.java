@@ -1,5 +1,6 @@
 package com.example.spendly.bank.rabo.parser;
 
+import com.example.spendly.bank.common.exception.StatementParseException;
 import com.example.spendly.bank.common.parser.RawTransactionParser;
 import com.example.spendly.bank.common.source.TextStatementSource;
 import com.example.spendly.bank.rabo.model.RaboRawTransaction;
@@ -82,7 +83,7 @@ public class RaboRawTransactionParser implements RawTransactionParser<TextStatem
 
             if (isTransactionStartLine(line)) {
                 if (currentTransaction != null) {
-                    throw new IllegalArgumentException(
+                    throw new StatementParseException(
                             "Previous Rabobank transaction was not closed by processing date: "
                                     + currentTransaction
                     );
@@ -105,7 +106,7 @@ public class RaboRawTransactionParser implements RawTransactionParser<TextStatem
         }
 
         if (currentTransaction != null) {
-            throw new IllegalArgumentException(
+            throw new StatementParseException(
                     "Last Rabobank transaction was not closed by processing date: "
                             + currentTransaction
             );
@@ -122,13 +123,13 @@ public class RaboRawTransactionParser implements RawTransactionParser<TextStatem
         String[] lines = block.split("\\R");
 
         if (lines.length == 0) {
-            throw new IllegalArgumentException("Empty Rabobank transaction block");
+            throw new StatementParseException("Empty Rabobank transaction block");
         }
 
         Matcher startMatcher = TRANSACTION_START_PATTERN.matcher(lines[0]);
 
         if (!startMatcher.matches()) {
-            throw new IllegalArgumentException("Cannot parse Rabobank transaction start line: " + lines[0]);
+            throw new StatementParseException("Cannot parse Rabobank transaction start line: " + lines[0]);
         }
 
         String valueDate = resolveFullValueDate(startMatcher.group(1), period);
@@ -204,7 +205,7 @@ public class RaboRawTransactionParser implements RawTransactionParser<TextStatem
         }
 
         if (processingDate == null) {
-            throw new IllegalArgumentException("Cannot find processing date in Rabobank transaction block: " + block);
+            throw new StatementParseException("Cannot find processing date in Rabobank transaction block: " + block);
         }
 
         String description = String.join(" ", descriptionParts)
@@ -257,7 +258,7 @@ public class RaboRawTransactionParser implements RawTransactionParser<TextStatem
         Matcher matcher = ACCOUNT_CURRENCY_PATTERN.matcher(rawText);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("Cannot find Rabobank account currency");
+            throw new StatementParseException("Cannot find Rabobank account currency");
         }
 
         return matcher.group(1);

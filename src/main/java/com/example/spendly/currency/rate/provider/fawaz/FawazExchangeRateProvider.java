@@ -1,5 +1,6 @@
 package com.example.spendly.currency.rate.provider.fawaz;
 
+import com.example.spendly.currency.common.exception.ExchangeRateException;
 import com.example.spendly.currency.common.model.CurrencyCode;
 import com.example.spendly.currency.rate.provider.ExchangeRateProvider;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,13 +38,13 @@ public class FawazExchangeRateProvider implements ExchangeRateProvider {
                 .body(JsonNode.class);
 
         if (response == null || response.isEmpty()) {
-            throw new IllegalStateException("Fawaz exchange API returned empty response");
+            throw new ExchangeRateException("Fawaz exchange API returned empty response");
         }
 
         JsonNode baseCurrencyNode = response.get(baseCurrencyCode);
 
         if (baseCurrencyNode == null || baseCurrencyNode.isNull()) {
-            throw new IllegalStateException(
+            throw new ExchangeRateException(
                     "Fawaz exchange API response does not contain base currency: " + fromCurrency
             );
         }
@@ -51,7 +52,7 @@ public class FawazExchangeRateProvider implements ExchangeRateProvider {
         JsonNode targetRateNode = baseCurrencyNode.get(targetCurrencyCode);
 
         if (targetRateNode == null || targetRateNode.isNull()) {
-            throw new IllegalStateException(
+            throw new ExchangeRateException(
                     "Fawaz exchange API response does not contain target currency: " + toCurrency
             );
         }
