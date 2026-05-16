@@ -1,4 +1,4 @@
-package com.example.spendly.currency.rate.provider.fawaz.config;
+package com.example.spendly.currency.exchange.provider.fawaz.config;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

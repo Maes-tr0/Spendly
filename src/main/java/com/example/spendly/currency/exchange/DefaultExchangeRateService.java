@@ -1,8 +1,8 @@
-package com.example.spendly.currency.rate;
+package com.example.spendly.currency.exchange;
 
 import com.example.spendly.currency.common.exception.ExchangeRateException;
 import com.example.spendly.currency.common.model.CurrencyCode;
-import com.example.spendly.currency.rate.provider.ExchangeRateProvider;
+import com.example.spendly.currency.exchange.provider.ExchangeRateProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

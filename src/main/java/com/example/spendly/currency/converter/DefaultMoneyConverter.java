@@ -1,8 +1,8 @@
-package com.example.spendly.currency.conversion;
+package com.example.spendly.currency.converter;
 
 import com.example.spendly.currency.common.exception.ExchangeRateException;
 import com.example.spendly.currency.common.model.CurrencyCode;
-import com.example.spendly.currency.rate.ExchangeRateService;
+import com.example.spendly.currency.exchange.ExchangeRateService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +12,7 @@ import java.time.LocalDate;
 
 @Service
 @AllArgsConstructor
-public class DefaultCurrencyConversionService implements CurrencyConversionService {
+public class DefaultMoneyConverter implements MoneyConverterService {
 
     private final ExchangeRateService exchangeRateService;
 

@@ -1,8 +1,8 @@
-package com.example.spendly.currency.rate.provider.fawaz;
+package com.example.spendly.currency.exchange.provider.fawaz;
 
 import com.example.spendly.currency.common.exception.ExchangeRateException;
 import com.example.spendly.currency.common.model.CurrencyCode;
-import com.example.spendly.currency.rate.provider.ExchangeRateProvider;
+import com.example.spendly.currency.exchange.provider.ExchangeRateProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;

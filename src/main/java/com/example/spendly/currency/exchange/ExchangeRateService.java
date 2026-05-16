@@ -1,4 +1,4 @@
-package com.example.spendly.currency.rate;
+package com.example.spendly.currency.exchange;
 
 import com.example.spendly.currency.common.model.CurrencyCode;
 
